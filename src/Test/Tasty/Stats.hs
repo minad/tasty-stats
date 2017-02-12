@@ -24,7 +24,7 @@ import Test.Tasty.Runners
 import qualified Data.IntMap as IntMap
 
 data Stat = Stat
-  { idx          :: Int
+  { idx         :: Int
   , name        :: TestName
   , time        :: Time
   , date        :: UTCTime
@@ -113,8 +113,7 @@ showStat Stat{..}
   ! gitCommit
   ! gitTag
   ! gitDate
-  ! numThreads
-  ! ('\n':)
+  ! (show numThreads ++) . ('\n':)
   where s ! f = (show s ++) . (';':) . f
         infixr 9 !
 
