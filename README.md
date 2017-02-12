@@ -15,7 +15,7 @@ Then you can pass the option `--stats stats.csv` to the testsuite.
 Currently the following information is collected in this order:
 
 ```
-idx, name, time, result, description, gitdate, gitcommit, date, nthreads
+idx, name, time, result, gitdate, gitcommit, date, nthreads, description
 ```
 
 With tasty-auto:

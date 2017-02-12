@@ -93,7 +93,7 @@ formatCSV = foldEndo . map ((. ('\n':)) . foldEndo . intersperse (',':) . map fi
         isValid c      = isPrint c && not (isSpace c)
 
 header :: [String]
-header = ["idx", "name", "time", "result", "description", "gitdate", "gitcommit", "date", "nthreads"]
+header = ["idx", "name", "time", "result", "gitdate", "gitcommit", "date", "nthreads", "description"]
 
 resultRow :: Int -> [(Int, (TestName, Result))] -> IO [[String]]
 resultRow nthreads' results = do
@@ -105,4 +105,4 @@ resultRow nthreads' results = do
     \(show -> idx, (name, Result { resultDescription=dropWhileEnd isSpace -> description
                                  , resultShortDescription=result
                                  , resultTime=show -> time })) ->
-    [idx, name, time, result, description, gitdate, gitcommit, date, nthreads]
+    [idx, name, time, result, gitdate, gitcommit, date, nthreads, description]
