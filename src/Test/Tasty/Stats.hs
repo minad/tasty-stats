@@ -52,7 +52,7 @@ composeReporters (TestReporter o1 f1) (TestReporter o2 f2) =
     (Nothing, g) -> g
     (Just g1, Just g2) -> Just $ \s -> do
       (h1, h2) <- concurrently (g1 s) (g2 s)
-      pure $ \x -> fst <$> concurrently (h1 x) (h2 x)
+      pure $ \x -> uncurry (&&) <$> concurrently (h1 x) (h2 x)
 composeReporters _ _ = error "Only TestReporters can be composed"
 
 zipMap :: IntMap a -> IntMap b -> IntMap (a, b)
