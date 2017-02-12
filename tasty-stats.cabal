@@ -4,8 +4,8 @@
 
 name:           tasty-stats
 version:        0.1.0.1
-synopsis:       Collecting statistics of the Tasty testsuite
-description:    Collecting statistics of the Tasty testsuite
+synopsis:       Collect statistics of your Tasty testsuite in a CSV file
+description:    Collect statistics of your Tasty testsuite in a CSV file
 category:       Testing
 stability:      experimental
 homepage:       https://github.com/minad/tasty-stats#readme
