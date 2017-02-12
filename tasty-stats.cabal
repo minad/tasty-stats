@@ -39,6 +39,7 @@ library
     , tagged     >= 0.7  && < 0.9
     , tasty      >= 0.10 && < 0.12
     , time       >= 1.5  && < 1.7
+    , async      >= 2.0  && < 2.2
   exposed-modules:
       Test.Tasty.Stats
   default-language: Haskell2010

@@ -17,6 +17,7 @@ import Data.Time (getCurrentTime, formatTime, defaultTimeLocale)
 import System.Directory (doesFileExist)
 import System.Exit (ExitCode(..))
 import System.Process (readProcessWithExitCode)
+import Control.Concurrent.Async (concurrently)
 import Test.Tasty
 import Test.Tasty.Ingredients
 import Test.Tasty.Options
@@ -47,12 +48,11 @@ composeReporters :: Ingredient -> Ingredient -> Ingredient
 composeReporters (TestReporter o1 f1) (TestReporter o2 f2) =
   TestReporter (o1 ++ o2) $ \o t ->
   case (f1 o t, f2 o t) of
-    (g1, Nothing) -> g1
-    (Nothing, g2) -> g2
+    (g, Nothing) -> g
+    (Nothing, g) -> g
     (Just g1, Just g2) -> Just $ \s -> do
-      h1 <- g1 s
-      h2 <- g2 s
-      pure $ \x -> h1 x >> h2 x
+      (h1, h2) <- concurrently (g1 s) (g2 s)
+      pure $ \x -> fst <$> concurrently (h1 x) (h2 x)
 composeReporters _ _ = error "Only TestReporters can be composed"
 
 zipMap :: IntMap a -> IntMap b -> IntMap (a, b)
