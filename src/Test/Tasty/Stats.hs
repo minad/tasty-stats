@@ -47,6 +47,7 @@ instance IsOption (Maybe StatsPath) where
   optionName = Tagged "stats"
   optionHelp = Tagged "A file path to store the collected statistics"
 
+-- | Reporter with support to collect statistics in a file.
 statsReporter :: Ingredient
 statsReporter = TestReporter optDesc runner
   where optDesc = [ Option (Proxy :: Proxy (Maybe StatsPath)) ]
@@ -66,8 +67,9 @@ composeReporters (TestReporter o1 f1) (TestReporter o2 f2) =
       pure $ \x -> h1 x >> h2 x
 composeReporters _ _ = error "Only TestReporters can be composed"
 
-consoleReporter :: Ingredient
-consoleReporter = composeReporters consoleTestReporter statsReporter
+-- | Console reporter with support to collect statistics in a file.
+consoleStatsReporter :: Ingredient
+consoleStatsReporter = composeReporters consoleTestReporter statsReporter
 
 zipMap :: IntMap a -> IntMap b -> IntMap (a, b)
 zipMap a b = IntMap.mapMaybeWithKey (\k v -> (v,) <$> IntMap.lookup k b) a
