@@ -1,20 +1,20 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns #-}
 module Test.Tasty.Stats (statsReporter, consoleStatsReporter) where
 
 import Control.Concurrent.STM (atomically, readTVar, TVar, STM, retry)
 import Control.Monad ((>=>))
-import Data.Maybe (fromMaybe)
-import Data.Char (isSpace)
+import Data.Char (isSpace, isPrint)
 import Data.Foldable (fold)
 import Data.IntMap (IntMap)
-import Data.List (dropWhileEnd)
+import Data.List (dropWhileEnd, intersperse)
 import Data.Monoid (Endo(..))
 import Data.Proxy (Proxy(..))
 import Data.Tagged (Tagged(..))
-import Data.Time (getCurrentTime, UTCTime, formatTime, defaultTimeLocale)
+import Data.Time (getCurrentTime, formatTime, defaultTimeLocale)
+import System.Directory (doesFileExist)
 import System.Exit (ExitCode(..))
 import System.Process (readProcessWithExitCode)
 import Test.Tasty
@@ -23,37 +23,25 @@ import Test.Tasty.Options
 import Test.Tasty.Runners
 import qualified Data.IntMap as IntMap
 
-data Stat = Stat
-  { idx         :: Int
-  , name        :: TestName
-  , time        :: Time
-  , date        :: UTCTime
-  , success     :: Bool
-  , failReason  :: Maybe String
-  , failInfo    :: Maybe String
-  , desc        :: String
-  , shortDesc   :: String
-  , gitCommit   :: String
-  , gitTag      :: String
-  , gitDate     :: String
-  , numThreads  :: Int
-  }
+newtype StatsFile = StatsFile FilePath
 
-newtype StatsPath = StatsPath FilePath
-
-instance IsOption (Maybe StatsPath) where
+instance IsOption (Maybe StatsFile) where
   defaultValue = Nothing
-  parseValue = Just . Just . StatsPath
+  parseValue = Just . Just . StatsFile
   optionName = Tagged "stats"
-  optionHelp = Tagged "A file path to store the collected statistics"
+  optionHelp = Tagged "CSV file to store the collected statistics"
 
 -- | Reporter with support to collect statistics in a file.
 statsReporter :: Ingredient
 statsReporter = TestReporter optDesc runner
-  where optDesc = [ Option (Proxy :: Proxy (Maybe StatsPath)) ]
+  where optDesc = [ Option (Proxy :: Proxy (Maybe StatsFile)) ]
         runner opts tree = do
-          StatsPath path <- lookupOption opts
-          pure $ collectStats (getNumThreads $ lookupOption opts) path $ IntMap.fromList $ zip [0..] $ testsNames opts tree
+          StatsFile file <- lookupOption opts
+          pure $ collectStats (getNumThreads $ lookupOption opts) file $ IntMap.fromList $ zip [0..] $ testsNames opts tree
+
+-- | Console reporter with support to collect statistics in a file.
+consoleStatsReporter :: Ingredient
+consoleStatsReporter = composeReporters consoleTestReporter statsReporter
 
 composeReporters :: Ingredient -> Ingredient -> Ingredient
 composeReporters (TestReporter o1 f1) (TestReporter o2 f2) =
@@ -67,10 +55,6 @@ composeReporters (TestReporter o1 f1) (TestReporter o2 f2) =
       pure $ \x -> h1 x >> h2 x
 composeReporters _ _ = error "Only TestReporters can be composed"
 
--- | Console reporter with support to collect statistics in a file.
-consoleStatsReporter :: Ingredient
-consoleStatsReporter = composeReporters consoleTestReporter statsReporter
-
 zipMap :: IntMap a -> IntMap b -> IntMap (a, b)
 zipMap a b = IntMap.mapMaybeWithKey (\k v -> (v,) <$> IntMap.lookup k b) a
 
@@ -79,55 +63,46 @@ waitFinished = readTVar >=> \case
   Done x -> pure x
   _      -> retry
 
-foldEndo :: (Functor f, Foldable f) => f (a -> a) -> (a -> a)
-foldEndo = appEndo . fold . fmap Endo
-
 collectStats :: Int -> FilePath -> IntMap TestName -> StatusMap -> IO (Time -> IO Bool)
-collectStats threads path names status = do
+collectStats nthreads file names status = do
   results <- atomically (traverse waitFinished status)
-  stats <- mkStat threads >>= pure . flip map (IntMap.toList $ zipMap names results)
-  appendFile path $ foldEndo (map showStat stats) ""
-  pure (const (pure (and $ fmap resultSuccessful results)))
+  rows    <- resultRow nthreads $ IntMap.toList $ zipMap names results
+  exists  <- doesFileExist file
+  if exists
+    then appendFile file $ formatCSV rows ""
+    else writeFile  file $ formatCSV (header : rows) ""
+  pure $ const $ pure $ and $ fmap resultSuccessful results
 
 git :: [String] -> IO String
 git args = readProcessWithExitCode "git" args "" >>=
   pure . \case (ExitSuccess, out, _) -> dropWhileEnd isSpace out
                (ExitFailure{}, _, _) -> "Unknown"
 
-getFailInfo :: FailureReason -> Maybe String
-getFailInfo TestFailed             = Nothing
-getFailInfo (TestTimedOut i)       = Just $ show i
-getFailInfo (TestThrewException e) = Just $ show e
+foldEndo :: (Functor f, Foldable f) => f (a -> a) -> (a -> a)
+foldEndo = appEndo . fold . fmap Endo
 
-showStat :: Stat -> ShowS
-showStat Stat{..}
-  = idx
-  ! name
-  ! time
-  ! formatTime defaultTimeLocale "%FT%T%QZ" date
-  ! success
-  ! fromMaybe "" failReason
-  ! fromMaybe "" failInfo
-  ! desc
-  ! shortDesc
-  ! gitCommit
-  ! gitTag
-  ! gitDate
-  ! (show numThreads ++) . ('\n':)
-  where s ! f = (show s ++) . (';':) . f
-        infixr 9 !
+formatCSV :: [[String]] -> ShowS
+formatCSV = foldEndo . map ((. ('\n':)) . foldEndo . intersperse (',':) . map field)
+  where field s | all isValid s = (s++)
+                | otherwise        = ('"':) . escape s . ('"':)
+        escape ('"':s) = ("\\\""++) . escape s
+        escape (c:s)   = (c:) . escape s
+        escape []      = id
+        isValid ' '    = True
+        isValid ','    = False
+        isValid c      = isPrint c && not (isSpace c)
 
-mkStat :: Int -> IO ((Int, (TestName, Result)) -> Stat)
-mkStat numThreads = do
-  gitTag    <- git ["describe", "--dirty", "--tags", "--all"]
-  gitCommit <- git ["rev-parse", "HEAD"]
-  gitDate   <- git ["log", "HEAD", "-1", "--format=%cd"]
-  date      <- getCurrentTime
-  pure $ \(idx, (name, r@Result { resultDescription=desc
-                                , resultShortDescription=shortDesc
-                                , resultTime=time
-                                , .. }))
-         -> let (failReason, failInfo) = case resultOutcome of
-                  Success   -> (Nothing, Nothing)
-                  Failure f -> (Just $ show f, getFailInfo f)
-            in Stat { success=resultSuccessful r, .. }
+header :: [String]
+header = ["idx", "name", "time", "result", "description", "gitdate", "gitcommit", "date", "nthreads"]
+
+resultRow :: Int -> [(Int, (TestName, Result))] -> IO [[String]]
+resultRow nthreads' results = do
+  let nthreads = show nthreads'
+  gitcommit <- git ["rev-parse", "HEAD"]
+  gitdate   <- git ["log", "HEAD", "-1", "--format=%cd"]
+  date      <- formatTime defaultTimeLocale "%FT%T%QZ" <$> getCurrentTime
+  pure $ flip map results $
+    \(show -> idx, (name, Result { resultDescription=dropWhileEnd isSpace -> description
+                                 , resultShortDescription=result
+                                 , resultTime=show -> time })) ->
+    [idx, name, time, result, description, gitdate, gitcommit, date, nthreads]
