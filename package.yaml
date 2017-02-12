@@ -1,0 +1,33 @@
+name: tasty-stats
+version: 0.1.0.0
+description: Collecting statistics of the Tasty testsuite
+synopsis: Collecting statistics of the Tasty testsuite
+category: Testing
+stability: experimental
+author: Daniel Mendler <mail@daniel-mendler.de>
+maintainer: Daniel Mendler <mail@daniel-mendler.de>
+copyright: 2017 Daniel Mendler
+license: MIT
+github: minad/tasty-stats
+
+extra-source-files:
+- "*.md"
+
+ghc-options:
+- -Wall
+
+tested-with:
+  GHC == 7.10.3,
+  GHC == 8.0.1
+
+dependencies:
+- base       >= 4.8  && < 5
+- containers >= 0.4  && < 0.6
+- tasty      >= 0.10 && < 0.12
+- tagged     >= 0.7  && < 0.9
+- stm        >= 2.4  && < 2.6
+- time       >= 1.5  && < 1.7
+- process    >= 1.3  && < 1.5
+
+library:
+  source-dirs: src
