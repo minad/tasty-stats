@@ -3,7 +3,7 @@
 -- see: https://github.com/sol/hpack
 
 name:           tasty-stats
-version:        0.1.0.0
+version:        0.1.0.1
 synopsis:       Collecting statistics of the Tasty testsuite
 description:    Collecting statistics of the Tasty testsuite
 category:       Testing

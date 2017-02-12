@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
-module Test.Tasty.Stats (statsReporter, consoleReporter) where
+module Test.Tasty.Stats (statsReporter, consoleStatsReporter) where
 
 import Control.Concurrent.STM (atomically, readTVar, TVar, STM, retry)
 import Control.Monad ((>=>))

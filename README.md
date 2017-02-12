@@ -5,14 +5,14 @@
 
 This package provides auto discovery for the tasty test framework.
 
-Use the `Test.Tasty.Stats.consoleReporter` ingredient:
+Use the `Test.Tasty.Stats.consoleStatsReporter` ingredient:
 
 ``` haskell
-main = defaultMainWithIngredients (Test.Tasty.Stats.consoleReporter : defaultIngredients) testTree
+main = defaultMainWithIngredients (Test.Tasty.Stats.consoleStatsReporter : defaultIngredients) testTree
 ```
 
 With tasty-auto:
 ``` haskell
 -- test/test.hs
-{-# OPTIONS_GHC -F -pgmF tasty-auto -optF Test.Tasty.Stats.consoleReporter #-}
+{-# OPTIONS_GHC -F -pgmF tasty-auto -optF Test.Tasty.Stats.consoleStatsReporter #-}
 ```
