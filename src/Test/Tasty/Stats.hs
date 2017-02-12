@@ -4,6 +4,7 @@
 {-# LANGUAGE ViewPatterns #-}
 module Test.Tasty.Stats (statsReporter, consoleStatsReporter) where
 
+import Control.Concurrent.Async (concurrently)
 import Control.Concurrent.STM (atomically, readTVar, TVar, STM, retry)
 import Control.Monad ((>=>))
 import Data.Char (isSpace, isPrint)
@@ -17,7 +18,6 @@ import Data.Time (getCurrentTime, formatTime, defaultTimeLocale)
 import System.Directory (doesFileExist)
 import System.Exit (ExitCode(..))
 import System.Process (readProcessWithExitCode)
-import Control.Concurrent.Async (concurrently)
 import Test.Tasty
 import Test.Tasty.Ingredients
 import Test.Tasty.Options
