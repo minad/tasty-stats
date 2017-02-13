@@ -1,5 +1,5 @@
 name: tasty-stats
-version: 0.2.0.0
+version: 0.2.0.1
 description: Collect statistics of your Tasty testsuite in a CSV file
 synopsis: Collect statistics of your Tasty testsuite in a CSV file
 category: Testing
