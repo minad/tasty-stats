@@ -4,7 +4,6 @@
 {-# LANGUAGE ViewPatterns #-}
 module Test.Tasty.Stats (statsReporter, consoleStatsReporter) where
 
-import Control.Concurrent.Async (concurrently)
 import Control.Concurrent.STM (atomically, readTVar, TVar, STM, retry)
 import Control.Monad ((>=>))
 import Data.Char (isSpace, isPrint)
@@ -43,17 +42,6 @@ statsReporter = TestReporter optDesc runner
 -- | Console reporter with support to collect statistics in a file.
 consoleStatsReporter :: Ingredient
 consoleStatsReporter = composeReporters consoleTestReporter statsReporter
-
-composeReporters :: Ingredient -> Ingredient -> Ingredient
-composeReporters (TestReporter o1 f1) (TestReporter o2 f2) =
-  TestReporter (o1 ++ o2) $ \o t ->
-  case (f1 o t, f2 o t) of
-    (g, Nothing) -> g
-    (Nothing, g) -> g
-    (Just g1, Just g2) -> Just $ \s -> do
-      (h1, h2) <- concurrently (g1 s) (g2 s)
-      pure $ \x -> uncurry (&&) <$> concurrently (h1 x) (h2 x)
-composeReporters _ _ = error "Only TestReporters can be composed"
 
 zipMap :: IntMap a -> IntMap b -> IntMap (a, b)
 zipMap a b = IntMap.mapMaybeWithKey (\k v -> (v,) <$> IntMap.lookup k b) a
