@@ -13,7 +13,7 @@ import Data.List (dropWhileEnd, intersperse)
 import Data.Monoid (Endo(..))
 import Data.Proxy (Proxy(..))
 import Data.Tagged (Tagged(..))
-import Data.Time (getCurrentTime, formatTime, defaultTimeLocale)
+import Data.Time (getCurrentTime, formatTime, rfc822DateFormat, defaultTimeLocale)
 import System.Directory (doesFileExist)
 import System.Exit (ExitCode(..))
 import System.Process (readProcessWithExitCode)
@@ -73,7 +73,7 @@ formatCSV :: [[String]] -> ShowS
 formatCSV = foldEndo . map ((. ('\n':)) . foldEndo . intersperse (',':) . map field)
   where field s | all isValid s = (s++)
                 | otherwise        = ('"':) . escape s . ('"':)
-        escape ('"':s) = ("\\\""++) . escape s
+        escape ('"':s) = ("\"\""++) . escape s
         escape (c:s)   = (c:) . escape s
         escape []      = id
         isValid ' '    = True
@@ -87,8 +87,8 @@ resultRow :: Int -> [(Int, (TestName, Result))] -> IO [[String]]
 resultRow nthreads' results = do
   let nthreads = show nthreads'
   gitcommit <- git ["rev-parse", "HEAD"]
-  gitdate   <- git ["log", "HEAD", "-1", "--format=%cd"]
-  date      <- formatTime defaultTimeLocale "%FT%T%QZ" <$> getCurrentTime
+  gitdate   <- git ["log", "HEAD", "-1", "--format=%cd", "--date=rfc"]
+  date      <- formatTime defaultTimeLocale rfc822DateFormat <$> getCurrentTime
   pure $ flip map results $
     \(show -> idx, (name, Result { resultDescription=dropWhileEnd isSpace -> description
                                  , resultShortDescription=result

@@ -1,5 +1,3 @@
 packages:
 - .
-- location: ../tasty/core
-  extra-dep: True
-resolver: nightly-2017-02-10
+resolver: nightly-2017-02-23
