@@ -1,7 +1,7 @@
 name: tasty-stats
 version: 0.2.0.4
 description: Collect statistics of your Tasty testsuite in a CSV file
-synopsis: Collect statistics of your Tasty testsuite in a CSV file
+synopsis: Collect statistics of your Tasty testsuite
 category: Testing
 stability: experimental
 author: Daniel Mendler <mail@daniel-mendler.de>

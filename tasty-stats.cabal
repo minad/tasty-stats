@@ -2,11 +2,11 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6fb363924b368b474dc64031e5d5e1d07d35b8df94a95c1b733378485355238b
+-- hash: a8a3e8fb980855e0ad8d693000f6e7289eaaab45400bba54b745860c4b01541e
 
 name:           tasty-stats
-version:        0.2.0.3
-synopsis:       Collect statistics of your Tasty testsuite in a CSV file
+version:        0.2.0.4
+synopsis:       Collect statistics of your Tasty testsuite
 description:    Collect statistics of your Tasty testsuite in a CSV file
 category:       Testing
 stability:      experimental
