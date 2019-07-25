@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a8a3e8fb980855e0ad8d693000f6e7289eaaab45400bba54b745860c4b01541e
+-- hash: c8e130c896cff03614b1cafc56e1cffa4925525df7db0a2249ecb3c92a40fc36
 
 name:           tasty-stats
 version:        0.2.0.4
@@ -19,7 +21,6 @@ license:        MIT
 license-file:   LICENSE
 tested-with:    GHC == 7.10.3, GHC == 8.0.1
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
     README.md
 
@@ -32,14 +33,14 @@ library
       src
   ghc-options: -Wall
   build-depends:
-      base >=4.8 && <5
-    , containers >=0.4 && <0.6
-    , directory >=1.1 && <1.4
-    , process >=1.3 && <1.7
-    , stm >=2.4 && <2.6
-    , tagged >=0.7 && <0.9
-    , tasty >=0.11.2 && <1.2
-    , time >=1.5 && <1.9
+      base       >=4.8    && <5
+    , containers >=0.4    && <0.7
+    , directory  >=1.1    && <1.4
+    , process    >=1.3    && <1.7
+    , stm        >=2.4    && <2.6
+    , tagged     >=0.7    && <0.9
+    , tasty      >=0.11.2 && <1.3
+    , time       >=1.5    && <1.9
   exposed-modules:
       Test.Tasty.Stats
   other-modules:
